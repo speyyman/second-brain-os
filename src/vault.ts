@@ -1,0 +1,77 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import { join, posix } from 'node:path'
+import { parseNote, type Properties } from './frontmatter.js'
+
+export type Note = {
+  /** Path inside the vault with forward slashes, e.g. `20 Projects/Raised Bed/Raised Bed.md`. */
+  path: string
+  /** File name without `.md`: the title Obsidian shows and links by. */
+  name: string
+  properties: Properties
+  body: string
+  error?: string
+}
+
+export type Vault = {
+  root: string
+  notes: Note[]
+  /** Every other file (images, PDFs), by vault path. */
+  files: string[]
+}
+
+/** Read every note and file in a vault, skipping dot folders such as `.obsidian`, `.git` and `.claude`. */
+export function readVault(root: string): Vault {
+  const notes: Note[] = []
+  const files: string[] = []
+  const walk = (rel: string) => {
+    for (const entry of readdirSync(join(root, rel), { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue
+      const path = rel ? posix.join(rel, entry.name) : entry.name
+      if (entry.isDirectory()) walk(path)
+      else if (entry.name.toLowerCase().endsWith('.md')) {
+        const parsed = parseNote(readFileSync(join(root, path), 'utf8'))
+        notes.push({ path, name: entry.name.slice(0, -3), ...parsed })
+      } else files.push(path)
+    }
+  }
+  walk('')
+  notes.sort((a, b) => a.path.localeCompare(b.path))
+  files.sort()
+  return { root, notes, files }
+}
+
+export type Target = { kind: 'note'; note: Note } | { kind: 'file'; path: string }
+
+/**
+ * Resolve a link target the way Obsidian does: an exact vault path first, then by file name,
+ * and when several files share a name, the one with the shortest path wins.
+ */
+export function resolve(vault: Vault, target: string): Target | undefined {
+  const t = target.trim().replace(/\\/g, '/').replace(/^\//, '')
+  if (!t) return undefined
+  const lower = t.toLowerCase()
+  const isMd = lower.endsWith('.md')
+  const hasExt = /\.[a-z0-9]{1,5}$/i.test(t) && !isMd
+
+  if (!hasExt) {
+    const want = isMd ? lower : `${lower}.md`
+    const byPath = vault.notes.find((n) => n.path.toLowerCase() === want)
+    if (byPath) return { kind: 'note', note: byPath }
+    const tail = `/${want}`
+    const matches = vault.notes.filter((n) => `/${n.path.toLowerCase()}`.endsWith(tail))
+    const best = shortest(matches, (n) => n.path)
+    if (best) return { kind: 'note', note: best }
+    return undefined
+  }
+  const byPath = vault.files.find((f) => f.toLowerCase() === lower)
+  if (byPath) return { kind: 'file', path: byPath }
+  const best = shortest(
+    vault.files.filter((f) => `/${f.toLowerCase()}`.endsWith(`/${lower}`)),
+    (f) => f,
+  )
+  return best ? { kind: 'file', path: best } : undefined
+}
+
+function shortest<T>(items: T[], path: (t: T) => string): T | undefined {
+  return [...items].sort((a, b) => path(a).length - path(b).length || path(a).localeCompare(path(b)))[0]
+}

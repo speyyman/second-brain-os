@@ -1,0 +1,291 @@
+/* Reading Copy: the theme for vault-publish's HTML output. Tokens and rules are in DESIGN.md. */
+
+@font-face {
+  font-family: 'Literata';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/literata-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Literata';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/literata-latin-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Literata';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/literata-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/atkinson-hyperlegible-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/atkinson-hyperlegible-latin-700-normal.woff2') format('woff2');
+}
+
+:root {
+  --paper: #fbf8f1;
+  --ink: #1c1b19;
+  --muted: #5b574f;
+  --link: #1d4f91;
+  --rule: #d9d1c1;
+  --mark: #f7e58a;
+  --aside: #f2ede1;
+  --caution: #8a3b12;
+
+  --read: 'Literata', Georgia, serif;
+  --scan: 'Atkinson Hyperlegible', Verdana, sans-serif;
+
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 1rem;
+  --s4: 1.5rem;
+  --s5: 2.5rem;
+  --s6: 4rem;
+  --column: 38rem;
+  --gutter: 1.25rem;
+  --radius: 2px;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #171613;
+    --ink: #ebe6db;
+    --muted: #a9a396;
+    --link: #93b8ec;
+    --rule: #3a372f;
+    --mark: #5a4b12;
+    --aside: #211f1b;
+    --caution: #f0a57a;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--read);
+  font-kerning: normal;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -3rem;
+  font: 700 0.875rem/1 var(--scan);
+  background: var(--paper);
+  padding: var(--s2) var(--s3);
+}
+.skip:focus {
+  top: var(--s2);
+}
+
+.masthead,
+main,
+.colophon {
+  max-width: calc(var(--column) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.masthead {
+  padding-block: var(--s4) var(--s3);
+  border-bottom: 1px solid var(--rule);
+  font: 700 0.8125rem/1 var(--scan);
+  letter-spacing: 0.04em;
+}
+.masthead a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.masthead a:hover {
+  color: var(--ink);
+}
+
+main {
+  padding-block: var(--s5) var(--s6);
+}
+
+.colophon {
+  padding-block: var(--s4);
+  border-top: 1px solid var(--rule);
+  font: 400 0.8125rem/1.4 var(--scan);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--read);
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 var(--s3);
+}
+h2 {
+  font-size: 1.375rem;
+  margin: var(--s5) 0 var(--s2);
+}
+h3,
+h4 {
+  font-size: 1.125rem;
+  margin: var(--s4) 0 var(--s2);
+}
+
+p,
+ul,
+ol,
+table,
+pre,
+aside {
+  margin: 0 0 var(--s3);
+}
+
+.meta {
+  font: 400 0.8125rem/1.4 var(--scan);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: var(--s5);
+}
+.tag {
+  white-space: nowrap;
+}
+.tag::before {
+  content: '· ';
+}
+
+a {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover,
+a:focus-visible {
+  text-decoration-thickness: 2px;
+}
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+mark {
+  background: var(--mark);
+  color: var(--ink);
+}
+
+blockquote {
+  margin: 0 0 var(--s3);
+  padding-left: var(--s3);
+  border-left: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+.callout {
+  background: var(--aside);
+  border-left: 3px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--s3) var(--s3) var(--s2);
+}
+.callout-title {
+  font: 700 0.875rem/1.3 var(--scan);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--s2);
+}
+.callout[data-callout='caution'] .callout-title,
+.callout[data-callout='warning'] .callout-title,
+.callout[data-callout='danger'] .callout-title {
+  color: var(--caution);
+}
+.callout[data-callout='caution'],
+.callout[data-callout='warning'],
+.callout[data-callout='danger'] {
+  border-left-color: var(--caution);
+}
+
+code,
+pre {
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  font-size: 0.875em;
+}
+pre {
+  background: var(--aside);
+  border-radius: var(--radius);
+  padding: var(--s3);
+  overflow-x: auto;
+}
+
+table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+th {
+  font: 700 0.8125rem/1.3 var(--scan);
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+th,
+td {
+  padding: var(--s2) var(--s3) var(--s2) 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: var(--s5) 0;
+}
+
+.index {
+  list-style: none;
+  padding: 0;
+}
+.index li {
+  padding-block: var(--s2);
+  border-bottom: 1px solid var(--rule);
+}
+.index time {
+  display: block;
+  font: 400 0.8125rem/1.4 var(--scan);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}

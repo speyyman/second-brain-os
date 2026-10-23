@@ -1,0 +1,57 @@
+{
+  "name": "vault-publish",
+  "version": "0.1.0",
+  "description": "Share chosen notes from an Obsidian vault without exposing the rest: link-safe conversion and a privacy linter that blocks the export.",
+  "license": "MIT",
+  "author": "Saeed Peyman",
+  "type": "module",
+  "bin": {
+    "vault-publish": "dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "theme",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speyyman/second-brain-os.git"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "e2e": "npm run build && node scripts/e2e.mjs",
+    "check-vault": "npm run build && node dist/cli.js check-links vault",
+    "demo": "npm run build && node dist/cli.js vault --folder \"20 Projects/Raised Bed\" --publish-flag --format html --out demo"
+  },
+  "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "5.3.0",
+    "@fontsource/literata": "5.3.0",
+    "marked": "18.1.1",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  }
+}

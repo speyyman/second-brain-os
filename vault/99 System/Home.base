@@ -1,0 +1,46 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - not:
+        - file.inFolder("90 Archive")
+        - file.inFolder("99 System")
+views:
+  - type: table
+    name: Now
+    filters:
+      and:
+        - 'type == "project"'
+        - 'status == "active"'
+    order:
+      - file.name
+      - next
+      - updated
+  - type: table
+    name: Inbox
+    filters:
+      and:
+        - file.inFolder("00 Inbox")
+    order:
+      - file.name
+      - created
+  - type: table
+    name: Sparks
+    filters:
+      and:
+        - 'spark == true'
+    order:
+      - file.name
+      - type
+      - file.folder
+  - type: table
+    name: Recently touched
+    limit: 10
+    filters:
+      and:
+        - 'file.mtime > now() - "1 week"'
+        - 'type != "daily"'
+        - 'type != "weekly"'
+    order:
+      - file.name
+      - file.folder
+      - file.mtime
