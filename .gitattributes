@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
+# This fixture is CRLF with a byte-order mark on purpose.
+test/fixtures/tricky/Public/Windows?note.md -text
