@@ -80,6 +80,26 @@ export function splitCode(markdown: string): Segment[] {
   return out
 }
 
+/**
+ * Remove Obsidian comments (`%% ... %%`), which may span lines. `%%` inside code is not a
+ * comment. An unclosed comment hides the rest of the note, code included, as in Obsidian.
+ */
+export function stripComments(markdown: string): string {
+  let out = ''
+  let inComment = false
+  for (const seg of splitCode(markdown)) {
+    if (seg.code) {
+      if (!inComment) out += seg.text
+      continue
+    }
+    seg.text.split('%%').forEach((part, i) => {
+      if (i > 0) inComment = !inComment
+      if (!inComment) out += part
+    })
+  }
+  return out
+}
+
 /** Apply a rewrite to the prose parts of Markdown only. */
 export function mapProse(markdown: string, fn: (prose: string) => string): string {
   return splitCode(markdown)

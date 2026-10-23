@@ -1,4 +1,4 @@
-import { attachmentFiles, attachmentName, frontmatter } from './shared.js'
+import { attachmentFiles, frontmatter } from './shared.js'
 import type { Adapter } from './types.js'
 
 /** A folder of plain Markdown: one file per note, an index, and the attachments they use. */
@@ -6,7 +6,7 @@ export const markdownAdapter: Adapter = {
   name: 'markdown',
   htmlCallouts: false,
   noteHref: (slug, anchor) => `${slug}.md${anchor ? `#${anchor}` : ''}`,
-  fileHref: (path) => `attachments/${attachmentName(path)}`,
+  fileHref: (name) => `attachments/${name}`,
   render(pages, ctx) {
     const out = new Map<string, string | Buffer>(attachmentFiles(ctx))
     for (const page of pages) {

@@ -16,8 +16,8 @@ export type Page = {
 
 export type WriteContext = {
   vaultRoot: string
-  /** Vault paths of attachments the pages refer to. */
-  files: string[]
+  /** Attachments the pages refer to: where each is in the vault, and the name it is copied under. */
+  files: { path: string; name: string }[]
 }
 
 export type RenderResult = {
@@ -36,6 +36,7 @@ export type Adapter = {
   name: string
   htmlCallouts: boolean
   noteHref: (slug: string, anchor?: string) => string
-  fileHref: (path: string) => string
+  /** Href for a copied attachment, by the name it is copied under. */
+  fileHref: (name: string) => string
   render: (pages: Page[], ctx: WriteContext) => RenderResult
 }

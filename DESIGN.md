@@ -4,7 +4,7 @@ The design system for the HTML that `vault-publish` writes.
 
 ## Concept
 
-A note that leaves a private vault becomes a handout: the copy you print from your own notebook and pass across a table. Reading Copy borrows from that object. Off-white paper, near-black ink, one blue pencil for links, a yellow highlighter for `==marks==`, and margins wide enough to write in. It is deliberately quiet, because the pages are someone's notes, not a brand: the system should disappear behind the text and still look made on purpose. The one structural idea is the reading column, 36 to 40 characters of ruled calm at a time, set in a book face built for long reading on screens.
+A note that leaves a private vault becomes a handout: the copy you print from your own notebook and pass across a table. Reading Copy borrows from that object. Off-white paper, near-black ink, one blue pencil for links, a yellow highlighter for `==marks==`, and margins wide enough to write in. It is deliberately quiet, because the pages are someone's notes, not a brand: the system should disappear behind the text and still look made on purpose. The one structural idea is the reading column: 38rem wide, about 70 characters a line, set in a book face built for long reading on screens.
 
 ## Tokens
 
@@ -73,7 +73,7 @@ Focus is always visible: a 2px `--link` outline with 2px offset on every interac
 
 1. Never use colour as the only signal. Links are underlined; callout types are named in their titles.
 2. Never add a second accent. Blue pencil is for links, the highlighter only for marks, the caution tone only for caution titles.
-3. Never let the column grow past 40em or fall under 1.25rem of gutter; long lines are where reading copy stops being readable.
+3. Never let the column grow past 38rem or fall under 1.25rem of gutter; long lines are where reading copy stops being readable.
 
 ## Not the website
 

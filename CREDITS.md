@@ -7,7 +7,7 @@
 
 ## Sample notes
 
-- The research note on _Walden_ paraphrases Henry David Thoreau, _Walden, and On The Duty Of Civil Disobedience_ (1854), public domain, as published by [Project Gutenberg, eBook #205](https://www.gutenberg.org/ebooks/205). The figures quoted (two years and two months; about two and a half acres; $14.72½; twelve bushels of beans and eighteen of potatoes) were checked against that text.
+- The research note on _Walden_ paraphrases Henry David Thoreau, _Walden, and On The Duty Of Civil Disobedience_, public domain, as published by [Project Gutenberg, eBook #205](https://www.gutenberg.org/ebooks/205). The figures quoted (two years and two months; about two and a half acres; $14.72½; twelve bushels of beans and eighteen of potatoes) were checked against that text, in the chapters Economy and The Bean-Field.
 - All other sample notes were written for this kit. They describe no real person or place.
 
 ## Libraries

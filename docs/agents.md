@@ -28,7 +28,7 @@ The agents in this kit are not background processes. Nothing runs on its own, wa
 
 ## Rules that make them safe
 
-- **Propose, then act.** Sorting, cleanup and anything that moves files shows a plan first. Deletion always needs an explicit yes, even when you said "just do it".
+- **Propose, then act.** Sorting, cleanup and anything that moves files shows a plan first. Deletion always needs an explicit yes, even when you said "go".
 - **Moves go through Obsidian.** Moving a file behind Obsidian's back breaks links and can fight with sync, so skills move and rename through the Obsidian CLI, or hand you a list to do yourself.
 - **Your words stay yours.** Agents capture text as you wrote it, never invent your energy number, your feelings or your wins, and leave the "why" and "sparks" sections of research notes for you.
 - **One next action.** Every active project shows exactly one next step on Home, small enough to start in ten minutes. Most of the system's usefulness comes from that one line being right.

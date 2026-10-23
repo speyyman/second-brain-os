@@ -24,7 +24,7 @@ The Project template: properties `type: project`, `status`, `next`, `tags`, then
 
 ## A good `next`
 
-Exactly one action, starting with a verb, startable in about ten minutes, specific enough to need no more thought: "Measure the sunny strip by the fence", not "Work on the garden". Never stack several actions into `next`; a longer plan belongs in a plan note. When the current one is done, propose the following one from the project's own plan.
+Exactly one action, starting with a verb, startable in about ten minutes, specific enough to need no more thought. For example, "Measure the sunny strip by the fence", not "Work on the garden". Never stack several actions into `next`; a longer plan belongs in a plan note. When the current one is done, propose the following one from the project's own plan.
 
 ## Progress, pausing, finishing
 

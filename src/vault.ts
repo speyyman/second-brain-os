@@ -50,26 +50,30 @@ export function resolve(vault: Vault, target: string): Target | undefined {
   const t = target.trim().replace(/\\/g, '/').replace(/^\//, '')
   if (!t) return undefined
   const lower = t.toLowerCase()
-  const isMd = lower.endsWith('.md')
-  const hasExt = /\.[a-z0-9]{1,5}$/i.test(t) && !isMd
 
-  if (!hasExt) {
-    const want = isMd ? lower : `${lower}.md`
-    const byPath = vault.notes.find((n) => n.path.toLowerCase() === want)
-    if (byPath) return { kind: 'note', note: byPath }
-    const tail = `/${want}`
-    const matches = vault.notes.filter((n) => `/${n.path.toLowerCase()}`.endsWith(tail))
-    const best = shortest(matches, (n) => n.path)
-    if (best) return { kind: 'note', note: best }
-    return undefined
+  // A file whose name matches exactly wins (`[[diagram.png]]`). Otherwise try a note, so a
+  // note with a dot in its name (`[[Version 2.0]]`) is not mistaken for a file.
+  const file = () => {
+    const byPath = vault.files.find((f) => f.toLowerCase() === lower)
+    if (byPath) return byPath
+    return shortest(
+      vault.files.filter((f) => `/${f.toLowerCase()}`.endsWith(`/${lower}`)),
+      (f) => f,
+    )
   }
-  const byPath = vault.files.find((f) => f.toLowerCase() === lower)
-  if (byPath) return { kind: 'file', path: byPath }
-  const best = shortest(
-    vault.files.filter((f) => `/${f.toLowerCase()}`.endsWith(`/${lower}`)),
-    (f) => f,
-  )
-  return best ? { kind: 'file', path: best } : undefined
+  const note = () => {
+    const want = lower.endsWith('.md') ? lower : `${lower}.md`
+    const byPath = vault.notes.find((n) => n.path.toLowerCase() === want)
+    if (byPath) return byPath
+    return shortest(
+      vault.notes.filter((n) => `/${n.path.toLowerCase()}`.endsWith(`/${want}`)),
+      (n) => n.path,
+    )
+  }
+  const f = lower.endsWith('.md') ? undefined : file()
+  if (f) return { kind: 'file', path: f }
+  const n = note()
+  return n ? { kind: 'note', note: n } : undefined
 }
 
 function shortest<T>(items: T[], path: (t: T) => string): T | undefined {

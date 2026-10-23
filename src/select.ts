@@ -1,5 +1,5 @@
 import { isPublishFalse, isPublishTrue, propertyTags } from './frontmatter.js'
-import { splitCode } from './text.js'
+import { splitCode, stripComments } from './text.js'
 import type { Note, Vault } from './vault.js'
 
 export type Selection = {
@@ -24,7 +24,7 @@ export class SelectionError extends Error {}
 /** Inline #tags in prose (not in code, not headings), lower case without the `#`. */
 export function inlineTags(body: string): string[] {
   const tags = new Set<string>()
-  for (const seg of splitCode(body)) {
+  for (const seg of splitCode(stripComments(body))) {
     if (seg.code) continue
     for (const m of seg.text.matchAll(/(?:^|[\s(])#([\p{L}\p{N}_/-]*[\p{L}_/-][\p{L}\p{N}_/-]*)/gu)) {
       if (m[1]) tags.add(m[1].toLowerCase())
@@ -45,6 +45,7 @@ export function selectNotes(vault: Vault, sel: Selection): Selected {
   }
   const folder = sel.folder
     ?.replace(/\\/g, '/')
+    .replace(/^(?:\.\/)+/, '')
     .replace(/^\/+|\/+$/g, '')
     .toLowerCase()
   const tag = sel.tag?.replace(/^#/, '').toLowerCase()

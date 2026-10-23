@@ -12,9 +12,9 @@ aliases: [Walden]
 Whether the bean-field chapter of Walden says anything useful about starting small.
 
 ## What I found
-Henry David Thoreau wrote most of Walden while living alone in a house he built on the shore of Walden Pond in Concord, Massachusetts, where by his own account he lived for two years and two months. The book was published in 1854.
+Henry David Thoreau wrote most of Walden while living alone in a house he built on the shore of Walden Pond in Concord, Massachusetts, where by his own account he lived for two years and two months.
 
-In the chapter on the bean-field he describes planting about two and a half acres of light, sandy soil, mostly with beans and with smaller parts in potatoes, corn, peas and turnips. He put no manure on it, since he did not own the land, and admits he did not quite hoe all of it even once. His costs for the first season came to $14.72 and a half cent, and he harvested twelve bushels of beans and eighteen of potatoes. The yellow corn and turnips were too late to come to anything.
+He counts the field twice. In the first chapter, Economy, he describes planting about two and a half acres of light, sandy soil, mostly with beans and with smaller parts in potatoes, corn, peas and turnips. He put no manure on it, since he did not own the land, and admits he did not quite hoe all of it even once. His costs for the first season came to $14.72 and a half cent, and he got twelve bushels of beans and eighteen of potatoes. The yellow corn and turnips were too late to come to anything. Later, in the chapter called The Bean-Field, he comes back to the same plot, "two acres and a half of upland", and gives the same twelve bushels and the same $14.72 and a half.
 
 What stands out is how carefully he counted. The chapter is part farming and part bookkeeping, and the numbers make the point better than the argument does.
 

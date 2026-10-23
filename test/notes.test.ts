@@ -90,14 +90,18 @@ describe('selectNotes', () => {
     expect(paths({ publishFlag: true })).toEqual([
       'Private/Child.md',
       'Public/Hub.md',
+      'Public/Leaks.md',
       'Public/Nested/Deep/Child.md',
+      'Public/Version 2.0.md',
       'Public/Windows note.md',
     ])
   })
   it('requires every rule given', () => {
     expect(paths({ publishFlag: true, folder: 'Public' })).toEqual([
       'Public/Hub.md',
+      'Public/Leaks.md',
       'Public/Nested/Deep/Child.md',
+      'Public/Version 2.0.md',
       'Public/Windows note.md',
     ])
     expect(paths({ folder: 'Public/', tag: 'share' })).toEqual([

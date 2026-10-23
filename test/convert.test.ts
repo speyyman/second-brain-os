@@ -1,3 +1,4 @@
+import { posix } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { markdownAdapter } from '../src/adapters/markdown.js'
 import { convert, PRIVATE_LINK_TEXT } from '../src/convert.js'
@@ -16,7 +17,7 @@ const run = (body: string, htmlCallouts = false) =>
     note: hub,
     published,
     noteHref: markdownAdapter.noteHref,
-    fileHref: markdownAdapter.fileHref,
+    fileHref: (path: string) => markdownAdapter.fileHref(posix.basename(path)),
     htmlCallouts,
   })
 
@@ -92,9 +93,7 @@ describe('Obsidian syntax', () => {
   })
   it('collects attachments and gives images their alt text', () => {
     const r = run('![[diagram.png|300]] and ![[diagram.png|A diagram]]')
-    expect(r.markdown).toBe(
-      '![diagram](attachments/public-diagram.png) and ![A diagram](attachments/public-diagram.png)\n',
-    )
+    expect(r.markdown).toBe('![diagram](attachments/diagram.png) and ![A diagram](attachments/diagram.png)\n')
     expect(r.files).toEqual(['Public/diagram.png'])
   })
 })

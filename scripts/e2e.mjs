@@ -39,7 +39,9 @@ try {
   writeFileSync(join(leaky, 'Note.md'), `---\npublish: true\n---\nConfig:\n\n\`\`\`\nTOKEN=${token}\n\`\`\`\n`)
   r = run(leaky, '--publish-flag', '--out', join(tmp, 'leaky-out'))
   check('a planted token blocks the export (exit 2)', r.code === 2 && !existsSync(join(tmp, 'leaky-out')), r.out)
-  check('the report names the file and line and hides the token', /Note\.md:6:\d+\s+token/.test(r.out) && !r.out.includes(token), r.out)
+  // The token is on line 7 of the source note (after three lines of properties).
+  const named = /Note\.md:7:\d+\s+token/.test(r.out)
+  check('the report names the source line and hides the token', named && !r.out.includes(token), r.out)
 } finally {
   rmSync(tmp, { recursive: true, force: true })
 }

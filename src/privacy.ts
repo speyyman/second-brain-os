@@ -11,6 +11,7 @@ export type FindingKind =
   | 'token'
   | 'secret-assignment'
   | 'deny-list'
+  | 'unpublished-link'
 
 export type Finding = {
   file: string
@@ -98,7 +99,13 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
  * place; the caller decides to block. Code blocks are scanned too, since that is where keys
  * usually get pasted.
  */
-export function scan(text: string, file: string, options: PrivacyOptions = {}): Finding[] {
+export function scan(
+  text: string,
+  file: string,
+  options: PrivacyOptions = {},
+  /** Find a match in the source note, so the report points at the line you would edit. */
+  locate?: (match: string) => { line: number; column: number } | undefined,
+): Finding[] {
   const allow = new Set((options.allow ?? []).map((a) => a.trim().toLowerCase()).filter(Boolean))
   const findings: Finding[] = []
   const taken: [number, number][] = []
@@ -108,7 +115,7 @@ export function scan(text: string, file: string, options: PrivacyOptions = {}): 
     const end = index + match.length
     if (allow.has(match.trim().toLowerCase()) || overlaps(index, end)) return
     taken.push([index, end])
-    findings.push({ file, ...lineCol(text, index), kind, masked: mask(match) })
+    findings.push({ file, ...(locate?.(match) ?? lineCol(text, index)), kind, masked: mask(match) })
   }
 
   for (const rule of RULES) {

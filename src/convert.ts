@@ -1,11 +1,13 @@
 import { posix } from 'node:path'
-import { headingAnchor, splitCode } from './text.js'
-import { resolve, type Note, type Vault } from './vault.js'
+import { headingAnchor, splitCode, stripComments } from './text.js'
+import { resolve, type Note, type Target, type Vault } from './vault.js'
 
 /** What a link to a note that is not being published turns into, so its title never leaves the vault. */
 export const PRIVATE_LINK_TEXT = 'a private note'
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
+/** A URL with a scheme (https:, mailto:, data:) or a protocol-relative one: not a vault path. */
+const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i
 
 export type ConvertOptions = {
   vault: Vault
@@ -14,7 +16,7 @@ export type ConvertOptions = {
   published: Map<string, string>
   /** Href for a published note (and optional heading anchor) as seen from this note. */
   noteHref: (slug: string, anchor?: string) => string
-  /** Href for an attachment copied next to the output. */
+  /** Href for an attachment copied next to the output, by its vault path. */
   fileHref: (path: string) => string
   /** Render callouts as `<aside>` blocks for HTML output instead of plain blockquotes. */
   htmlCallouts?: boolean
@@ -31,15 +33,42 @@ export type Converted = {
 }
 
 /**
- * Turn one note's Obsidian Markdown into portable Markdown: comments removed, wikilinks and
- * embeds rewritten or made safe, callouts, highlights and block ids converted. Code is left
- * exactly as written.
+ * Turn one note's Obsidian Markdown into portable Markdown: comments removed, every kind of
+ * link to another vault file (wikilinks, embeds, Markdown links and images, reference
+ * definitions, raw HTML href and src) rewritten or made safe, and callouts, highlights and
+ * block ids converted. Code is left exactly as written.
  */
 export function convert(body: string, o: ConvertOptions): Converted {
   const redactions: Redaction[] = []
   const files = new Set<string>()
+  const redact = (target: string, found: Target | undefined) =>
+    redactions.push({ target, reason: found ? 'not published' : 'not found' })
 
-  const link = (embed: boolean, rawTarget: string, rawHeading: string | undefined, alias: string | undefined) => {
+  /** Where a vault reference points once published: a page, a copied file, or nowhere. */
+  const destination = (found: Target | undefined, anchor?: string): string | undefined => {
+    if (found?.kind === 'file') {
+      files.add(found.path)
+      return o.fileHref(found.path)
+    }
+    const slug = found ? o.published.get(found.note.path) : undefined
+    return slug === undefined ? undefined : o.noteHref(slug, anchor)
+  }
+
+  /** A path written in a Markdown or HTML link: relative to this note first, then by name. */
+  const resolvePath = (raw: string): { found: Target | undefined; anchor?: string; label: string } => {
+    const [pathPart = '', hash] = raw.replace(/^<|>$/g, '').split('#', 2)
+    let path = pathPart
+    try {
+      path = decodeURIComponent(pathPart)
+    } catch {
+      // A malformed escape: use the text as written.
+    }
+    const rel = posix.normalize(posix.join(posix.dirname(o.note.path), path))
+    const found = resolve(o.vault, rel) ?? resolve(o.vault, path)
+    return { found, anchor: hash ? headingAnchor(hash) : undefined, label: posix.basename(path).replace(/\.md$/i, '') }
+  }
+
+  const wikilink = (embed: boolean, rawTarget: string, rawHeading: string | undefined, alias: string | undefined) => {
     const heading = rawHeading?.replace(/^#/, '').trim() || undefined
     const anchor = heading && !heading.startsWith('^') ? headingAnchor(heading.split('#').pop() ?? heading) : undefined
     const targetText = rawTarget.trim()
@@ -51,35 +80,39 @@ export function convert(body: string, o: ConvertOptions): Converted {
     }
 
     const found = resolve(o.vault, targetText)
-    const name = posix.basename(targetText).replace(/\.md$/i, '')
-
-    if (found?.kind === 'file') {
-      files.add(found.path)
-      const href = o.fileHref(found.path)
+    const href = destination(found, anchor)
+    if (found?.kind === 'file' && href) {
       const label = alias && !/^\d+(x\d+)?$/.test(alias) ? alias : posix.basename(found.path).replace(/\.[^.]+$/, '')
       return embed && IMAGE.test(found.path) ? `![${label}](${href})` : `[${label}](${href})`
     }
-
-    const slug = found ? o.published.get(found.note.path) : undefined
-    if (found && slug !== undefined) {
+    if (found?.kind === 'note' && href) {
       const title = found.note.name
-      const text = alias ?? (heading ? `${title}: ${heading}` : title)
-      return `[${text}](${o.noteHref(slug, anchor)})`
+      return `[${alias ?? (heading ? `${title}: ${heading}` : title)}](${href})`
     }
 
     // Not published, or not in the vault: keep the sentence readable, drop the title.
-    redactions.push({ target: targetText, reason: found ? 'not published' : 'not found' })
+    redact(targetText, found)
     if (embed) return ''
+    const name = posix.basename(targetText).replace(/\.md$/i, '')
     if (alias && alias.trim().toLowerCase() !== name.toLowerCase()) return alias
     return PRIVATE_LINK_TEXT
   }
 
+  const mdLink = (whole: string, bang: string, text: string, target: string) => {
+    if (EXTERNAL.test(target) || target.startsWith('#')) return whole
+    const { found, anchor, label } = resolvePath(target)
+    const href = destination(found, anchor)
+    if (href) return `${bang}[${text}](${href})`
+    redact(label, found)
+    if (bang) return ''
+    return text && text.trim().toLowerCase() !== label.toLowerCase() ? text : PRIVATE_LINK_TEXT
+  }
+
   const prose = (text: string) => {
-    // One pass over both link forms, so a link written by one rule is never rewritten by the other:
-    // wikilinks and embeds (inside a table the alias pipe is written `\|`), and standard Markdown
-    // links to other notes, e.g. [text](Other%20Note.md#part).
+    // One pass over wikilinks, embeds and inline Markdown links and images, so a link written
+    // by one rule is never rewritten by another. Inside a table the wikilink alias pipe is `\|`.
     let t = text.replace(
-      /(!?)\[\[([^[\]|#\\]*)(#[^[\]|\\]*)?(?:\\?\|([^[\]]*))?\]\]|(!?)\[([^\]]*)\]\((?![a-z][a-z0-9+.-]*:|#)(<[^>]+>|[^)\s]+?\.md)(#[^)\s]*)?\)/gi,
+      /(!?)\[\[([^[\]|#\\]*)(#[^[\]|\\]*)?(?:\\?\|([^[\]]*))?\]\]|(!?)\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)/g,
       (
         m,
         bang: string | undefined,
@@ -89,14 +122,37 @@ export function convert(body: string, o: ConvertOptions): Converted {
         mdBang: string | undefined,
         mdText: string | undefined,
         mdTarget: string | undefined,
-        mdHeading: string | undefined,
       ) => {
-        if (target !== undefined) return link(bang === '!', target, heading, alias?.trim() || undefined)
-        if (mdTarget === undefined) return m
-        const path = decodeURIComponent(mdTarget.replace(/^<|>$/g, ''))
-        const rel = posix.normalize(posix.join(posix.dirname(o.note.path), path))
-        const direct = o.vault.notes.find((n) => n.path.toLowerCase() === rel.toLowerCase())
-        return link(mdBang === '!', direct ? direct.path : path, mdHeading, mdText || undefined)
+        if (target !== undefined) return wikilink(bang === '!', target, heading, alias?.trim() || undefined)
+        if (mdTarget !== undefined) return mdLink(m, mdBang ?? '', mdText ?? '', mdTarget)
+        return m
+      },
+    )
+    // Reference definitions: [id]: path. A private target loses its definition, so the
+    // reference shows as plain text and the path goes nowhere.
+    // Footnotes ([^1]: text) are not definitions and are left alone.
+    t = t.replace(
+      /^( {0,3}\[(?!\^)[^\]]+\]:[ \t]*)(<[^>]+>|\S+)(.*)$/gm,
+      (m, lead: string, target: string, rest: string) => {
+        if (EXTERNAL.test(target) || target.startsWith('#')) return m
+        const { found, anchor, label } = resolvePath(target)
+        const href = destination(found, anchor)
+        if (href) return `${lead}${href}${rest}`
+        redact(label, found)
+        return ''
+      },
+    )
+    // Raw HTML attributes that point at vault files.
+    t = t.replace(
+      /\b(href|src)(\s*=\s*)("([^"]*)"|'([^']*)')/gi,
+      (m, attr: string, eq: string, _q, dq?: string, sq?: string) => {
+        const target = dq ?? sq ?? ''
+        if (!target || EXTERNAL.test(target) || target.startsWith('#')) return m
+        const { found, anchor, label } = resolvePath(target)
+        const href = destination(found, anchor)
+        if (href) return `${attr}${eq}"${href}"`
+        redact(label, found)
+        return `${attr}${eq}""`
       },
     )
     // ==highlight==
@@ -107,27 +163,32 @@ export function convert(body: string, o: ConvertOptions): Converted {
     return t
   }
 
-  const out: string[] = []
-  let inComment = false
-  for (const seg of splitCode(body)) {
-    if (seg.code) {
-      if (!inComment) out.push(seg.text)
-      continue
-    }
-    // %% comments %% can span lines; an unclosed one hides the rest of the note, as in Obsidian.
-    let kept = ''
-    const parts = seg.text.split('%%')
-    parts.forEach((part, i) => {
-      if (i > 0) inComment = !inComment
-      if (!inComment) kept += part
-    })
-    out.push(prose(kept))
-  }
-
-  const markdown = calloutsIn(out.join(''), !!o.htmlCallouts)
+  const rewritten = splitCode(stripComments(body))
+    .map((s) => (s.code ? s.text : prose(s.text)))
+    .join('')
+  const markdown = calloutsIn(rewritten, !!o.htmlCallouts)
     .replace(/\n{3,}/g, '\n\n')
     .trim()
   return { markdown: markdown ? markdown + '\n' : '', redactions, files: [...files] }
+}
+
+/**
+ * Relative links left in converted Markdown that point anywhere other than a published page,
+ * a copied attachment or an anchor. The converter should leave none; publish blocks on any.
+ */
+export function strayLinks(markdown: string, allowed: (href: string) => boolean): string[] {
+  const out: string[] = []
+  const check = (target: string) => {
+    const t = target.replace(/^<|>$/g, '')
+    if (t && !EXTERNAL.test(t) && !t.startsWith('#') && !allowed(t)) out.push(t)
+  }
+  for (const seg of splitCode(markdown)) {
+    if (seg.code) continue
+    for (const m of seg.text.matchAll(/\]\(\s*(<[^>]+>|[^)\s]+)/g)) check(m[1] ?? '')
+    for (const m of seg.text.matchAll(/^ {0,3}\[(?!\^)[^\]]+\]:[ \t]*(<[^>]+>|\S+)/gm)) check(m[1] ?? '')
+    for (const m of seg.text.matchAll(/\b(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)) check(m[1] ?? m[2] ?? '')
+  }
+  return out
 }
 
 /** Obsidian callouts (`> [!note] Title`) as a plain blockquote with a bold title, or as an aside for HTML. */

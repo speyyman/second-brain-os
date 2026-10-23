@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { Marked } from 'marked'
 import { escapeHtml } from '../convert.js'
 import { headingAnchor } from '../text.js'
-import { attachmentFiles, attachmentName } from './shared.js'
+import { attachmentFiles } from './shared.js'
 import type { Adapter, Page } from './types.js'
 
 const require = createRequire(import.meta.url)
@@ -98,7 +98,7 @@ export const htmlAdapter: Adapter = {
   name: 'html',
   htmlCallouts: true,
   noteHref: (slug, anchor) => `${slug}.html${anchor ? `#${anchor}` : ''}`,
-  fileHref: (path) => `attachments/${attachmentName(path)}`,
+  fileHref: (name) => `attachments/${name}`,
   render(pages, ctx) {
     const out = new Map<string, string | Buffer>(attachmentFiles(ctx))
     for (const page of pages) out.set(`${page.slug}.html`, article(page))

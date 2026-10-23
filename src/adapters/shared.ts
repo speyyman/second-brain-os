@@ -1,19 +1,12 @@
 import { readFileSync } from 'node:fs'
-import { join, posix } from 'node:path'
+import { join } from 'node:path'
 import { stringify } from 'yaml'
-import { slugify } from '../text.js'
 import type { Page, WriteContext } from './types.js'
 
-/** A flat, collision-free name for an attachment: its vault path slugged, extension kept. */
-export function attachmentName(path: string): string {
-  const ext = posix.extname(path).toLowerCase()
-  return `${slugify(path.slice(0, path.length - ext.length))}${ext}`
-}
-
-/** Copy the referenced attachments under `attachments/`. */
+/** Copy the referenced attachments under `attachments/`, each under the name publish gave it. */
 export function attachmentFiles(ctx: WriteContext): Map<string, Buffer> {
   const out = new Map<string, Buffer>()
-  for (const f of ctx.files) out.set(`attachments/${attachmentName(f)}`, readFileSync(join(ctx.vaultRoot, f)))
+  for (const f of ctx.files) out.set(`attachments/${f.name}`, readFileSync(join(ctx.vaultRoot, f.path)))
   return out
 }
 
