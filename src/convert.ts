@@ -1,5 +1,5 @@
 import { posix } from 'node:path'
-import { headingAnchor, splitCode, stripComments } from './text.js'
+import { headingAnchor, mapProse, splitCode, stripComments } from './text.js'
 import { resolve, type Note, type Target, type Vault } from './vault.js'
 
 /** What a link to a note that is not being published turns into, so its title never leaves the vault. */
@@ -41,6 +41,8 @@ export type Converted = {
 export function convert(body: string, o: ConvertOptions): Converted {
   const redactions: Redaction[] = []
   const files = new Set<string>()
+  /** Ids of reference definitions removed because they pointed at private notes. */
+  const dropped = new Set<string>()
   const redact = (target: string, found: Target | undefined) =>
     redactions.push({ target, reason: found ? 'not published' : 'not found' })
 
@@ -139,6 +141,7 @@ export function convert(body: string, o: ConvertOptions): Converted {
         const href = destination(found, anchor)
         if (href) return `${lead}${href}${rest}`
         redact(label, found)
+        dropped.add(/\[([^\]]+)\]/.exec(lead)?.[1]?.toLowerCase() ?? '')
         return ''
       },
     )
@@ -163,9 +166,18 @@ export function convert(body: string, o: ConvertOptions): Converted {
     return t
   }
 
-  const rewritten = splitCode(stripComments(body))
+  let rewritten = splitCode(stripComments(body))
     .map((s) => (s.code ? s.text : prose(s.text)))
     .join('')
+  // References to a dropped definition read as their text, not as "[text][id]". This runs after
+  // the whole note, because a definition usually sits far below the references to it.
+  if (dropped.size) {
+    rewritten = mapProse(rewritten, (text) =>
+      text.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (m, label: string, id: string) =>
+        dropped.has((id || label).toLowerCase()) ? label : m,
+      ),
+    )
+  }
   const markdown = calloutsIn(rewritten, !!o.htmlCallouts)
     .replace(/\n{3,}/g, '\n\n')
     .trim()

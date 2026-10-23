@@ -110,10 +110,11 @@ export function publish(o: PublishOptions): PublishReport {
       .join('\n')
   // Positions point into the source note (the line you would edit) when the match is found
   // there, and into the exported text otherwise.
-  const findings = pages.flatMap((p) => {
+  const all = pages.flatMap((p) => {
     const source = normalizeNewlines(readFileSync(join(vault.root, p.note.path), 'utf8'))
+    const lower = source.toLowerCase()
     const locate = (match: string) => {
-      const i = source.indexOf(match)
+      const i = lower.indexOf(match.toLowerCase())
       return i < 0 ? undefined : lineCol(source, i)
     }
     const text = `${stringify(publicProperties(p))}\n${p.converted.markdown}\n${extra(p)}`
@@ -123,13 +124,28 @@ export function publish(o: PublishOptions): PublishReport {
       kind: 'unpublished-link',
       masked: mask(href),
     }))
-    return [...scan(text, p.note.path, o.privacy, locate), ...strays]
+    // Attachment names leave the vault too. Each is checked as written and with its hyphens
+    // and underscores read as spaces, so a deny-list phrase matches "secret-plans.png", and a
+    // finding points at the line that embeds it.
+    const names = p.converted.files.flatMap((path) => {
+      const base = posix.basename(path)
+      const at = locate(base)
+      const pin = at ? () => at : undefined
+      return scan(`${base}\n${base.replace(/[-_.]+/g, ' ')}`, p.note.path, o.privacy, pin)
+    })
+    return [...scan(text, p.note.path, o.privacy, locate), ...strays, ...names]
+  })
+  // One finding per place and kind.
+  const seen = new Set<string>()
+  const findings = all.filter((f) => {
+    const key = `${f.file}:${f.line}:${f.column}:${f.kind}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
   })
   const files = [...fileNames.entries()]
     .map(([path, name]) => ({ path, name }))
     .sort((a, b) => a.name.localeCompare(b.name))
-  // Attachment names leave the vault too, so the deny list and the detectors see them.
-  findings.push(...scan(files.map((f) => f.name).join('\n'), 'attachment names', o.privacy))
   const rendered = adapter.render(pages, { vaultRoot: vault.root, files })
 
   const report: PublishReport = {

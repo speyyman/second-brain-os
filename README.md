@@ -15,7 +15,7 @@ You need [Obsidian](https://obsidian.md) and, for the agents, [Claude Code](http
 3. Install two community plugins: **Templater** (set its template folder to `99 System/Templates`, and folder templates `00 Inbox` → Capture, `30 Research` → Research, `40 Mind` → Daydream) and **Periodic Notes** (daily notes in `10 Journal/Daily` from `Daily`, weekly in `10 Journal/Weekly` from `Weekly Review`). The core **Bases** plugin draws Home's views.
 4. Open a terminal in the vault and start Claude Code. Type `/today`.
 
-The sample notes (a raised-bed project, a note on the bean-field chapter of _Walden_, a daydream) show each folder in use. Delete them when you're ready.
+The sample notes (a raised-bed project, a note on the bean-field in _Walden_, a daydream) show each folder in use. Delete them when you're ready.
 
 ## What is in it
 

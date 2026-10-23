@@ -35,6 +35,8 @@ describe('every other way a note can point at a private one', () => {
   it('drops private reference definitions and rewrites published ones', () => {
     expect(out).toContain('[p]: child.md "Child"')
     expect(out).not.toMatch(/^\[r\]:/m)
+    // The reference to the dropped definition reads as plain text.
+    expect(out).toContain('A reference link and a [published ref][p] to the child.')
   })
   it('handles links without an extension and links by name', () => {
     expect(out).toContain('A link with no extension and one by name.')
@@ -99,10 +101,11 @@ describe('attachments', () => {
       selection: { publishFlag: true },
       format: 'markdown',
       dryRun: true,
-      privacy: { deny: ['alexandria'] },
+      privacy: { deny: ['alexandria trip'] },
     })
     expect(r.ok).toBe(false)
-    expect(r.findings.map((f) => [f.file, f.kind])).toContainEqual(['attachment names', 'deny-list'])
+    // The phrase matches the hyphenated file name, reported once, at the line that embeds it.
+    expect(r.findings).toEqual([expect.objectContaining({ file: 'Note.md', line: 4, kind: 'deny-list' })])
   })
 })
 
