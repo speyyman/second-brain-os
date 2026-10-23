@@ -49,7 +49,8 @@ function shell(title: string, main: string, description?: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
-${description ? `<meta name="description" content="${escapeHtml(description)}">\n` : ''}<link rel="stylesheet" href="style.css">
+${description ? `<meta name="description" content="${escapeHtml(description)}">\n` : ''}<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to the text</a>
@@ -76,8 +77,20 @@ function article(page: Page): string {
     `<article>
 <h1>${escapeHtml(page.title)}</h1>
 ${meta ? `<p class="meta">${meta}</p>\n` : ''}${body}</article>`,
-    page.description,
+    page.description ?? firstSentence(page.converted.markdown),
   )
+}
+
+/** The first sentence of the note's prose, for the page's description when it has none of its own. */
+function firstSentence(markdown: string): string | undefined {
+  const para = markdown.split('\n').find((line) => /^[A-Za-z0-9"'(]/.test(line.trim()))
+  if (!para) return undefined
+  const text = para
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>|[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return /^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text.slice(0, 160)
 }
 
 /** Static HTML pages in the Reading Copy theme, with an index, the stylesheet and its fonts. */
@@ -95,7 +108,14 @@ export const htmlAdapter: Adapter = {
           `<li><a href="${p.slug}.html">${escapeHtml(p.title)}</a>${p.date ? ` <time datetime="${p.date}">${formatDate(p.date)}</time>` : ''}</li>`,
       )
       .join('\n')
-    out.set('index.html', shell('Notes', `<h1>Notes</h1>\n<ul class="index">\n${items}\n</ul>`))
+    out.set(
+      'index.html',
+      shell(
+        'Notes',
+        `<h1>Notes</h1>\n<ul class="index">\n${items}\n</ul>`,
+        `${pages.length} note${pages.length === 1 ? '' : 's'}: ${pages.map((p) => p.title).join(', ')}.`,
+      ),
+    )
     out.set('style.css', readFileSync(join(themeDir, 'style.css'), 'utf8'))
     for (const [pkg, file] of FONTS) out.set(`fonts/${file}`, fontFile(pkg, file))
     return { files: out, warnings: [] }
