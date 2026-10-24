@@ -61,3 +61,5 @@ It refuses to write inside the vault, and refuses to empty a folder it did not w
 ## Licence
 
 Code: MIT ([LICENSE](LICENSE)). Vault templates, skills and docs: MIT as well, so you can adapt them freely. Fonts and sample sources: [CREDITS.md](CREDITS.md).
+
+Development was assisted by Claude (Anthropic).
